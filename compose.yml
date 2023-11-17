@@ -1,0 +1,45 @@
+services:
+  warehouse-http:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    restart: always
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+
+  warehouse-notifications:
+    build:
+      context: .
+      dockerfile: Dockerfile.Notifications
+    restart: always
+    depends_on:
+      - rabbitmq
+
+  mysql:
+    image: mysql:8
+    ports:
+      - 8083:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./warehouse/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: warehouse
+
+  redis:
+    image: redis
+    ports:
+      - 6380:6379
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+volumes:
+  mysql-data:
